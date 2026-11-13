@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>3D-печать PETG — @printNSK3D</title>
+  <style>
+    :root {
+      --bg: var(--tg-theme-bg-color, #ffffff);
+      --secondary-bg: var(--tg-theme-secondary-bg-color, #f4f4f5);
+      --text: var(--tg-theme-text-color, #18181b);
+      --hint: var(--tg-theme-hint-color, #71717a);
+      --accent: var(--tg-theme-button-color, #16a34a);
+      --accent-text: var(--tg-theme-button-text-color, #ffffff);
+      --border: rgba(128, 128, 128, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      padding-bottom: 100px;
+      line-height: 1.4;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--hint);
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background-color: var(--secondary-bg);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .file-drop {
+      border: 2px dashed var(--accent);
+      border-radius: 12px;
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(22, 163, 74, 0.05);
+      transition: background 0.2s;
+    }
+
+    .file-drop:active {
+      background: rgba(22, 163, 74, 0.12);
+    }
+
+    .file-drop input {
+      display: none;
+    }
+
+    .file-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .file-meta {
+      font-size: 12px;
+      color: var(--hint);
+      margin-top: 4px;
+    }
+
+    .colors-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .color-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 4px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background: var(--bg);
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .color-item.active {
+      border-color: var(--accent);
+      background: rgba(22, 163, 74, 0.08);
+    }
+
+    .swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.18);
+      margin-bottom: 5px;
+    }
+
+    .color-name {
+      font-size: 11px;
+      line-height: 1.15;
+      word-break: break-word;
+    }
+
+    .range-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .badge {
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      height: 6px;
+    }
+
+    .layer-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .layer-btn {
+      padding: 10px 8px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .layer-btn.active {
+      border-color: var(--accent);
+      background: rgba(22, 163, 74, 0.08);
+    }
+
+    .layer-title {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .layer-desc {
+      font-size: 11px;
+      color: var(--hint);
+      margin-top: 2px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .summary-row.total {
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      margin-top: 8px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    textarea, input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .footer-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .status-msg {
+      font-size: 12px;
+      text-align: center;
+      margin-top: 6px;
+      color: var(--hint);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Калькулятор 3D-печати (PETG)</h1>
+  <div class="subtitle">Пластик Green PLAST • 8 ₽/грамм • Заказ для @printNSK3D</div>
+
+  <div class="card">
+    <span class="label">1. Модель для печати (.STL)</span>
+    <label class="file-drop" id="dropZone">
+      <input type="file" id="stlInput" accept=".stl">
+      <div class="file-title" id="fileName">Нажмите, чтобы загрузить STL-файл</div>
+      <div class="file-meta" id="fileStats">Объём и вес рассчитаются автоматически</div>
+    </label>
+    <div style="margin-top: 10px;">
+      <span class="label" style="font-size: 12px; color: var(--hint);">Или укажите известный вес детали (г):</span>
+      <input type="number" id="manualWeight" min="1" placeholder="Например: 50">
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="label">2. Цвет пластика PETG (Green PLAST)</span>
+    <div class="colors-grid" id="colorsGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="range-header">
+      <span class="label" style="margin:0;">3. Плотность заполнения</span>
+      <span class="badge" id="infillBadge">15%</span>
+    </div>
+    <input type="range" id="infillRange" min="15" max="100" step="5" value="15">
+    <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--hint); margin-top:4px;">
+      <span>15% (стандарт)</span>
+      <span>50% (усиленная)</span>
+      <span>100% (монолит)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="label">4. Высота слоя (качество поверхности)</span>
+    <div class="layer-options" id="layerOptions">
+      <button type="button" class="layer-btn" data-mult="1.4" data-name="Высокая детализация (0.12 мм)">
+        <div class="layer-title">Высокая детализация</div>
+        <div class="layer-desc">Слой 0.12 мм • Гладкая поверхность (+40%)</div>
+      </button>
+      <button type="button" class="layer-btn active" data-mult="1.0" data-name="Стандартное качество (0.20 мм)">
+        <div class="layer-title">Стандартное качество</div>
+        <div class="layer-desc">Слой 0.20 мм • Оптимальный баланс</div>
+      </button>
+      <button type="button" class="layer-btn" data-mult="0.9" data-name="Черновая печать (0.28 мм)">
+        <div class="layer-title">Черновая печать</div>
+        <div class="layer-desc">Слой 0.28 мм • Быстро, виден слой (-10%)</div>
+      </button>
+      <button type="button" class="layer-btn" data-mult="1.2" data-name="Усиленный слой (0.16 мм)">
+        <div class="layer-title">Улучшенное качество</div>
+        <div class="layer-desc">Слой 0.16 мм • Аккуратные грани (+20%)</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="label">5. Комментарий к заказу</span>
+    <textarea id="commentInput" rows="2" placeholder="Количество штук, пожелания по прочности или срокам..."></textarea>
+  </div>
+
+  <div class="card">
+    <div class="summary-row">
+      <span>Материал:</span>
+      <strong>PETG Green PLAST (8 ₽/г)</strong>
+    </div>
+    <div class="summary-row">
+      <span>Выбранный цвет:</span>
+      <strong id="sumColor">Белый</strong>
+    </div>
+    <div class="summary-row">
+      <span>Расчётный вес:</span>
+      <strong id="sumWeight">0 г</strong>
+    </div>
+    <div class="summary-row">
+      <span>Качество слоя:</span>
+      <strong id="sumLayer">Стандартное качество (0.20 мм)</strong>
+    </div>
+    <div class="summary-row total">
+      <span>Итого к оплате:</span>
+      <span id="sumPrice">0 ₽</span>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <button class="submit-btn" id="submitBtn">Отправить заказ в личку @printNSK3D</button>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+
+  <script>
+    const PRICE_PER_GRAM = 8;
+    const PETG_DENSITY = 1.27; // г/см3
+    const TARGET_USERNAME = "printNSK3D";
+
+    const COLORS = [
+      { name: "Белый", hex: "#FFFFFF" },
+      { name: "Чёрный", hex: "#1C1C1E" },
+      { name: "Серый", hex: "#8E8E93" },
+      { name: "Серебристый", hex: "#C7C7CC" },
+      { name: "Графитовый", hex: "#3A3A3C" },
+      { name: "Слоновая кость", hex: "#F5F0DC" },
+      { name: "Бесцветный", hex: "linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%)" },
+      { name: "Красный", hex: "#DC2626" },
+      { name: "Оранжевый", hex: "#EA580C" },
+      { name: "Жёлтый", hex: "#EAB308" },
+      { name: "Зелёный", hex: "#16A34A" },
+      { name: "Хаки", hex: "#57534E" },
+      { name: "Голубой", hex: "#0284C7" },
+      { name: "Синий", hex: "#1D4ED8" },
+      { name: "Терракотовый", hex: "#9A3412" },
+      { name: "Кирпичный", hex: "#7F1D1D" }
+    ];
+
+    let state = {
+      file: null,
+      volumeCm3: 0,
+      color: COLORS[0].name,
+      infill: 15,
+      layerMultiplier: 1.0,
+      layerName: "Стандартное качество (0.20 мм)",
+      weightGrams: 0,
+      totalPrice: 0
+    };
+
+    // Инициализация палитры
+    const colorsGrid = document.getElementById("colorsGrid");
+    COLORS.forEach((c, idx) => {
+      const el = document.createElement("div");
+      el.className = "color-item" + (idx === 0 ? " active" : "");
+      el.innerHTML = `<div class="swatch" style="background:${c.hex}"></div><div class="color-name">${c.name}</div>`;
+      el.onclick = () => {
+        document.querySelectorAll(".color-item").forEach(i => i.classList.remove("active"));
+        el.classList.add("active");
+        state.color = c.name;
+        document.getElementById("sumColor").textContent = c.name;
+      };
+      colorsGrid.appendChild(el);
+    });
+
+    // Парсер объёма STL (Binary и ASCII)
+    function parseSTLVolume(buffer) {
+      const view = new DataView(buffer);
+      let isBinary = true;
+      if (buffer.byteLength >= 84) {
+        const triCount = view.getUint32(80, true);
+        const expectedSize = 84 + triCount * 50;
+        if (expectedSize !== buffer.byteLength) {
+          isBinary = false;
+        }
+      } else {
+        isBinary = false;
+      }
+
+      let totalVolumeMm3 = 0;
+
+      if (isBinary) {
+        const triCount = view.getUint32(80, true);
+        let offset = 84;
+        for (let i = 0; i < triCount; i++) {
+          offset += 12; // пропуск нормали
+          const x1 = view.getFloat32(offset, true), y1 = view.getFloat32(offset + 4, true), z1 = view.getFloat32(offset + 8, true);
+          const x2 = view.getFloat32(offset + 12, true), y2 = view.getFloat32(offset + 16, true), z2 = view.getFloat32(offset + 20, true);
+          const x3 = view.getFloat32(offset + 24, true), y3 = view.getFloat32(offset + 28, true), z3 = view.getFloat32(offset + 32, true);
+          offset += 38;
+          totalVolumeMm3 += signedTriangleVolume(x1, y1, z1, x2, y2, z2, x3, y3, z3);
+        }
+      } else {
+        const text = new TextDecoder().decode(buffer);
+        const vertexRegex = /vertex\s+([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)\s+([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)\s+([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)/g;
+        let vertices = [];
+        let match;
+        while ((match = vertexRegex.exec(text)) !== null) {
+          vertices.push([parseFloat(match[1]), parseFloat(match[2]), parseFloat(match[3])]);
+          if (vertices.length === 3) {
+            totalVolumeMm3 += signedTriangleVolume(
+              vertices[0][0], vertices[0][1], vertices[0][2],
+              vertices[1][0], vertices[1][1], vertices[1][2],
+              vertices[2][0], vertices[2][1], vertices[2][2]
+            );
+            vertices = [];
+          }
+        }
+      }
+      return Math.abs(totalVolumeMm3) / 1000.0; // см3
+    }
+
+    function signedTriangleVolume(x1, y1, z1, x2, y2, z2, x3, y3, z3) {
+      return (
+        x1 * (y2 * z3 - y3 * z2) -
+        y1 * (x2 * z3 - x3 * z2) +
+        z1 * (x2 * y3 - x3 * y2)
+      ) / 6.0;
+    }
+
+    function recalculate() {
+      const manualW = parseFloat(document.getElementById("manualWeight").value);
+      let weight = 0;
+
+      if (!isNaN(manualW) && manualW > 0) {
+        weight = manualW;
+      } else if (state.volumeCm3 > 0) {
+        // Учёт периметров (оболочка ~28% объёма) + заполнение внутренней части
+        const effectiveFill = 0.28 + 0.72 * (state.infill / 100);
+        weight = state.volumeCm3 * PETG_DENSITY * effectiveFill;
+      }
+
+      state.weightGrams = Math.round(weight * 10) / 10;
+      state.totalPrice = Math.round(state.weightGrams * PRICE_PER_GRAM * state.layerMultiplier);
+
+      document.getElementById("sumWeight").textContent = state.weightGrams + " г";
+      document.getElementById("sumPrice").textContent = state.totalPrice + " ₽";
+    }
+
+    document.getElementById("stlInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      state.file = file;
+      document.getElementById("fileName").textContent = file.name;
+      document.getElementById("fileStats").textContent = "Анализ геометрии модели...";
+
+      try {
+        const buffer = await file.arrayBuffer();
+        const vol = parseSTLVolume(buffer);
+        state.volumeCm3 = vol;
+        document.getElementById("manualWeight").value = "";
+        document.getElementById("fileStats").textContent = `Объём модели: ${vol.toFixed(2)} см³`;
+        recalculate();
+      } catch (err) {
+        document.getElementById("fileStats").textContent = "Файл прикреплён (укажите вес вручную при необходимости)";
+      }
+    });
+
+    document.getElementById("manualWeight").addEventListener("input", recalculate);
+
+    document.getElementById("infillRange").addEventListener("input", (e) => {
+      state.infill = parseInt(e.target.value, 10);
+      document.getElementById("infillBadge").textContent = state.infill + "%";
+      recalculate();
+    });
+
+    document.querySelectorAll(".layer-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".layer-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.layerMultiplier = parseFloat(btn.dataset.mult);
+        state.layerName = btn.dataset.name;
+        document.getElementById("sumLayer").textContent = state.layerName;
+        recalculate();
+      });
+    });
+
+    // Формирование текста заявки и отправка в личку @printNSK3D
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const comment = document.getElementById("commentInput").value.trim();
+      const statusMsg = document.getElementById("statusMsg");
+
+      const lines = [
+        "📦 Новый заказ на 3D-печать",
+        `• Пластик: PETG Green PLAST (8 ₽/г)`,
+        `• Цвет: ${state.color}`,
+        `• Заполнение: ${state.infill}%`,
+        `• Высота слоя: ${state.layerName}`,
+        `• Расчётный вес: ${state.weightGrams} г`,
+        `• Расчётная стоимость: ${state.totalPrice} ₽`,
+        state.file ? `• Файл модели: ${state.file.name}` : "• Файл: не прикреплён",
+        comment ? `• Комментарий: ${comment}` : ""
+      ].filter(Boolean);
+
+      const orderText = lines.join("\n");
+
+      // 1. Попытка отправить файл + текст через системное меню "Поделиться" (работает на смартфонах в Telegram)
+      if (state.file && navigator.canShare && navigator.canShare({ files: [state.file] })) {
+        try {
+          statusMsg.textContent = "Выберите чат @printNSK3D в открывшемся окне...";
+          await navigator.share({
+            files: [state.file],
+            title: "Заказ 3D-печати",
+            text: orderText
+          });
+          return;
+        } catch (err) {
+          // Если пользователь отменил или Web Share не сработал — переход к прямой ссылке в личку
+        }
+      }
+
+      // 2. Прямое открытие личного чата @printNSK3D с заполненным текстом заказа
+      const tgLink = `https://t.me/${TARGET_USERNAME}?text=${encodeURIComponent(orderText)}`;
+      statusMsg.textContent = "Открываю личный чат с @printNSK3D...";
+      window.open(tgLink, "_blank");
+    });
+
+    // Подключение Telegram WebApp API, если открыто внутри бота
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+  </script>
+</body>
+</html>
